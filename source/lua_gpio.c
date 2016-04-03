@@ -3,14 +3,17 @@
  
 #include <lua.h>
 #include <lauxlib.h>
- 
+
+#include "c_gpio.h" 
 #include "lua_gpio.h"
+#include "event_gpio.h"
+#include "common.h"
  
 /* Userdata object that will hold the counter and name. */
 typedef struct {
     counter_t *c;
     char      *name;
-	int gpio_direction[54];
+	int 	gpio_direction[54];
 } wxGPIO_userdata_t;
  
 static int wxGPIO_new(lua_State *L)
@@ -31,6 +34,11 @@ static int wxGPIO_new(lua_State *L)
     cu       = (wxGPIO_userdata_t *)lua_newuserdata(L, sizeof(*cu));
     cu->c    = NULL;
     cu->name = NULL;
+	
+	for (int k = 0; k < 54; k++)
+	{
+		gpio_direction[k] = 0;
+	}
  
     /* Add the metatable to the stack. */
     luaL_getmetatable(L, "wxGPIO");
@@ -47,7 +55,7 @@ static int wxGPIO_new(lua_State *L)
 static int wxGPIO_add(lua_State *L)
 {
     wxGPIO_userdata_t *cu;
-    int                  amount;
+    int amount;
  
     cu     = (wxGPIO_userdata_t *)luaL_checkudata(L, 1, "wxGPIO");
     amount = luaL_checkint(L, 2);
@@ -59,7 +67,7 @@ static int wxGPIO_add(lua_State *L)
 static int wxGPIO_subtract(lua_State *L)
 {
     wxGPIO_userdata_t *cu;
-    int                  amount;
+    int amount;
  
     cu     = (wxGPIO_userdata_t *)luaL_checkudata(L, 1, "wxGPIO");
     amount = luaL_checkint(L, 2);
@@ -168,6 +176,38 @@ static int mmap_gpio_mem(lua_State *L)
    }
 }
 
+
+
+// lua function cleanup(channel=None)
+// Usage #1:  GPIO:cleanup()
+// Usage #2:  GPIO:cleanup({1,3,12})
+static int wxGPIO_cleanup(lua_State *L)
+{
+	
+	int i;
+	int chancount = -666;
+	int found = 0;
+	int channel = -666;
+	unsigned int gpio;
+
+	void cleanup_one(void)
+	{
+	  // clean up any /sys/class exports
+	  event_cleanup(gpio);
+
+	  // set everything back to input
+	  if (gpio_direction[gpio] != -1) {
+		 setup_gpio(gpio, INPUT, PUD_OFF);
+		 gpio_direction[gpio] = -1;
+		 found = 1;
+	  }
+	}
+	
+	
+	
+	return 1;
+}	
+
  
 static const struct luaL_Reg wxGPIO_methods[] = {
     { "add",         wxGPIO_add       },
@@ -178,6 +218,7 @@ static const struct luaL_Reg wxGPIO_methods[] = {
     { "getname",     wxGPIO_getname   },
     { "__gc",        wxGPIO_destroy   },
     { "__tostring",  wxGPIO_tostring  },
+	{ "cleanup",  	 wxGPIO_cleanup  },
     { NULL,          NULL               },
 };
  

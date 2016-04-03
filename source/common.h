@@ -21,6 +21,8 @@ SOFTWARE.
 */
 
 #include "cpuinfo.h"
+#include <lua.h>
+#include <lauxlib.h>
 
 #define MODE_UNKNOWN -1
 #define BOARD        10
@@ -39,5 +41,5 @@ int gpio_direction[54];
 rpi_info rpiinfo;
 int setup_error;
 int module_setup;
-int check_gpio_priv(void);
-int get_gpio_number(int channel, unsigned int *gpio);
+int check_gpio_priv(lua_State *L);
+int get_gpio_number(lua_State *L, int channel, unsigned int *gpio);

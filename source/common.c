@@ -20,7 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "Python.h"
+//#include "Python.h"
+
 #include "c_gpio.h"
 #include "common.h"
 
@@ -31,30 +32,33 @@ const int pin_to_gpio_rev3[41] = {-1, -1, -1, 2, -1, 3, -1, 4, 14, -1, 15, 17, 1
 int setup_error = 0;
 int module_setup = 0;
 
-int check_gpio_priv(void)
+int check_gpio_priv(lua_State *L)
 {
     // check module has been imported cleanly
     if (setup_error)
     {
-        PyErr_SetString(PyExc_RuntimeError, "Module not imported correctly!");
+		luaL_error(L, "Module not imported correctly!");
+        //PyErr_SetString(PyExc_RuntimeError, "Module not imported correctly!");
         return 1;
     }
 
     // check mmap setup has worked
     if (!module_setup)
     {
-        PyErr_SetString(PyExc_RuntimeError, "No access to /dev/mem.  Try running as root!");
+		luaL_error(L, "No access to /dev/mem.  Try running as root!");
+        //PyErr_SetString(PyExc_RuntimeError, "No access to /dev/mem.  Try running as root!");
         return 2;
     }
     return 0;
 }
 
-int get_gpio_number(int channel, unsigned int *gpio)
+int get_gpio_number(lua_State *L, int channel, unsigned int *gpio)
 {
     // check setmode() has been run
     if (gpio_mode != BOARD && gpio_mode != BCM)
     {
-        PyErr_SetString(PyExc_RuntimeError, "Please set pin numbering mode using GPIO.setmode(GPIO.BOARD) or GPIO.setmode(GPIO.BCM)");
+		luaL_error(L, "Please set pin numbering mode using GPIO.setmode(GPIO.BOARD) or GPIO.setmode(GPIO.BCM)");
+        //PyErr_SetString(PyExc_RuntimeError, "Please set pin numbering mode using GPIO.setmode(GPIO.BOARD) or GPIO.setmode(GPIO.BCM)");
         return 3;
     }
 
@@ -63,7 +67,8 @@ int get_gpio_number(int channel, unsigned int *gpio)
       || (gpio_mode == BOARD && (channel < 1 || channel > 26) && rpiinfo.p1_revision != 3)
       || (gpio_mode == BOARD && (channel < 1 || channel > 40) && rpiinfo.p1_revision == 3) )
     {
-        PyErr_SetString(PyExc_ValueError, "The channel sent is invalid on a Raspberry Pi");
+		luaL_error(L, "The channel sent is invalid on a Raspberry Pi");
+        //PyErr_SetString(PyExc_ValueError, "The channel sent is invalid on a Raspberry Pi");
         return 4;
     }
 
@@ -72,7 +77,8 @@ int get_gpio_number(int channel, unsigned int *gpio)
     {
         if (*(*pin_to_gpio+channel) == -1)
         {
-            PyErr_SetString(PyExc_ValueError, "The channel sent is invalid on a Raspberry Pi");
+			luaL_error(L, "The channel sent is invalid on a Raspberry Pi");
+            //PyErr_SetString(PyExc_ValueError, "The channel sent is invalid on a Raspberry Pi");
             return 5;
         } else {
             *gpio = *(*pin_to_gpio+channel);
