@@ -30,3 +30,9 @@
 
 # Debug files
 *.dSYM/
+/source/nbproject/configurations.xml
+/source/nbproject/private/Default-build.log
+/source/nbproject/private/configurations.xml
+/source/nbproject/private/launcher.properties
+/source/nbproject/private/private.xml
+/source/nbproject/project.xml
